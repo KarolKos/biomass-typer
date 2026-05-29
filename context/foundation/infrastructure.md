@@ -103,6 +103,8 @@ Każde ryzyko związane z soczewką, która je ujawniła — rejestr jest audyto
 | Limit 50 subrequestów/żądanie na Free przy rozgałęzieniu analizy + retry | Adwokat diabła / Research | N | Ś | Monitoruj liczbę subrequestów; Workers Paid ($5/mo) podnosi limit |
 | Serwery MCP Cloudflare bez etykiety GA/beta; `cf` CLI w technical preview | Nieznane niewiadome / Research | Ś | N | Trzymaj się `wrangler` (GA) jako podstawy; MCP jako bonus, nie ścieżka krytyczna |
 | Vendor split Supabase + Cloudflare: 2 dashboardy/rozliczenia przy incydencie izolacji | Nieznane niewiadome | Ś | Ś | Runbook incydentu izolacji korelujący logi Workers + Supabase; jeden właściciel obu kont |
+| Site/Redirect URL w Supabase Auth nieustawione na prod → linki potwierdzające wskazują localhost, signup zepsuty na produkcji | Research finding (planowanie deployu) | Ś | W | Ustaw Site URL + Redirect URLs na origin `*.workers.dev` przed smoke-testem; zostaw `localhost:4321/**` dla dev |
+| Adapter v13 auto-włącza bindingi `IMAGES` + `SESSION` (KV) niezadeklarowane w `wrangler.jsonc` | Research finding (output buildu) | N | Ś | Nieszkodliwe dopóki `Astro.session`/processing obrazów nieużywane; przy błędzie w `wrangler tail` utwórz namespace KV dla SESSION lub wyłącz w opcjach adaptera |
 
 ## Rozpoczęcie pracy
 
@@ -111,8 +113,8 @@ Stack jest **już zescaffoldowany i skonfigurowany pod Workers** (`@astrojs/clou
 1. **Audyt dostępu do sekretów pod Astro 6 / v13** (przed pierwszym deployem — ryzyko #1). Upewnij się, że kod czyta `SUPABASE_URL`/`SUPABASE_KEY` przez `astro:env` lub `import { env } from 'cloudflare:workers'`, NIE przez usunięte `Astro.locals.runtime.env`. Potwierdź `export const prerender = false` na route'ach API.
 2. **Zaloguj wrangler i ustaw sekrety produkcyjne**: `npx wrangler login`, potem `npx wrangler secret put SUPABASE_URL` i `npx wrangler secret put SUPABASE_KEY`. Lokalnie te same wartości w `.dev.vars` (gitignored).
 3. **Dev lokalny z wiernością runtime**: `npm run dev` — Astro 6 odpala na prawdziwym workerd przez plugin Vite (osobny `wrangler dev` zbędny).
-4. **Pierwszy deploy jako preview, nie prod**: `npx wrangler versions upload` → preview URL bez ruszania produkcji. Smoke-test pełnej ścieżki (login + upload + analiza) NA preview — tu wychodzą luki `nodejs_compat`.
-5. **Promocja do produkcji**: `npx wrangler deploy` (lub `npx wrangler versions deploy` by promować przetestowaną wersję). Awaryjnie: `npx wrangler rollback`.
+4. **Pierwszy deploy → go-live**: `npx wrangler deploy`. UWAGA (korekta 2026-05-29): `wrangler versions upload` (preview) **nie działa na Workerze, który nigdy nie był wdrożony** — pierwszy push MUSI być `wrangler deploy`. Smoke-test pełnej ścieżki (signup → confirm → signin → /dashboard) na URL `*.workers.dev` — tu wychodzą luki `nodejs_compat` (konkretnie bug stream w `@supabase/ssr`, supabase/supabase#37592).
+5. **Kolejne wdrożenia (deploy #2+)**: `npx wrangler versions upload` (nieserwujący URL podglądu) → test → `npx wrangler versions deploy` (promocja). Awaryjnie: `npx wrangler rollback` (cofa tylko kod Workera — NIE schemat/migracje Supabase).
 6. **Token API zakresowany do tego projektu** (Workers Scripts:Edit, bez DNS/billing/account-wide) do CI i operacji agenta.
 
 ## Poza zakresem
