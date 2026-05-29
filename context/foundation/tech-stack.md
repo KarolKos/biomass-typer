@@ -5,7 +5,7 @@ project_name: biomass-typer
 hints:
   language_family: js
   team_size: solo
-  deployment_target: cloudflare-pages
+  deployment_target: cloudflare-workers # corrected 2026-05-29 (was cloudflare-pages); @astrojs/cloudflare v13 dropped Pages support — see infrastructure.md
   ci_provider: github-actions
   ci_default_flow: auto-deploy-on-merge
   bootstrapper_confidence: first-class
