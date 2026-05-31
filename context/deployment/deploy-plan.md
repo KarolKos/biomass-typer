@@ -2,7 +2,7 @@
 plan: first-production-deploy
 project: biomass-typer
 created: 2026-05-29
-status: live — auth backend verified; pending Supabase Auth URL + E2E signup
+status: live — E2E verified (signup→dashboard); email confirmation disabled (MVP)
 platform: Cloudflare Workers
 source: context/foundation/infrastructure.md
 ---
@@ -20,10 +20,11 @@ Worker był **już wdrożony 2026-05-28** (przez użytkownika, 4 deploymenty). S
 - **Ryzyko #2 (`@supabase/ssr` stream) — NIE wystąpiło:** bogus-signin → 302 `error=Invalid login credentials` (klient Supabase działa w runtime Workera). ✅
 - **Bindingi:** ASSETS, IMAGES, SESSION (KV) — auto-bindingi adaptera v13 obecne, deploy ich nie wywrócił.
 
-**Pozostało (bramki ludzkie):**
-1. Supabase → Authentication → URL Configuration: Site URL + Redirect URLs → `https://biomass-typer.kosy95.workers.dev` (+ zostaw `http://localhost:4321/**`). Bez tego linki w mailu potwierdzającym signup wskażą localhost.
-2. Pełny E2E: realny signup → mail → confirm → signin → `/dashboard`.
-3. Rotacja tokenu Cloudflare (był w czacie).
+**Wynik E2E (2026-05-31, potwierdzony przez użytkownika):** ✅ signup → signin → `/dashboard` działa. Wybrano szybki wariant MVP: **email confirmation WYŁĄCZONE** w Supabase (zamiast konfiguracji Site/Redirect URL).
+
+**Pozostałe housekeeping:**
+1. ⚠️ Przed realnymi użytkownikami: **włącz z powrotem email confirmation** + ustaw Supabase Site URL/Redirect URLs na origin prod (teraz każdy może się zarejestrować dowolnym, niezweryfikowanym mailem).
+2. Rotacja tokenu Cloudflare (był w czacie).
 
 ## Co wdrażamy
 
