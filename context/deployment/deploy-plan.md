@@ -2,7 +2,7 @@
 plan: first-production-deploy
 project: biomass-typer
 created: 2026-05-29
-status: approved — execution in progress
+status: live — auth backend verified; pending Supabase Auth URL + E2E signup
 platform: Cloudflare Workers
 source: context/foundation/infrastructure.md
 ---
@@ -10,6 +10,20 @@ source: context/foundation/infrastructure.md
 # Deploy plan — pierwsze wdrożenie produkcyjne (biomass-typer → Cloudflare Workers)
 
 Zatwierdzony plan (Plan Mode, 2026-05-29). Ścieżka audytu „co miało się wydarzyć" dla pierwszego go-live; źródło decyzji: `context/foundation/infrastructure.md`. Planowanie kamieni milowych może traktować ten plik jako prawdę o tym, „co już jest wdrożone".
+
+## Wynik wykonania (2026-05-31)
+
+Worker był **już wdrożony 2026-05-28** (przez użytkownika, 4 deploymenty). Stan po weryfikacji z tej sesji:
+
+- **Live:** `https://biomass-typer.kosy95.workers.dev` (konto kosy95@gmail.com, subdomena `kosy95`). `/` + `/auth/signin` → 200, `/dashboard` → 302 (middleware działa).
+- **Sekrety:** `SUPABASE_URL` + `SUPABASE_KEY` ustawione (publishable/anon). ⚠️ **Pitfall:** `$val | wrangler secret put` w PowerShell dokleił trailing CRLF → Supabase „Invalid API key". Naprawione przez **API Cloudflare** (`PUT …/scripts/biomass-typer/secrets`, dokładny JSON, bez newline). **Na przyszłość: nie pipe'ować sekretów do wrangler w PowerShell — użyć API albo trybu interaktywnego.**
+- **Ryzyko #2 (`@supabase/ssr` stream) — NIE wystąpiło:** bogus-signin → 302 `error=Invalid login credentials` (klient Supabase działa w runtime Workera). ✅
+- **Bindingi:** ASSETS, IMAGES, SESSION (KV) — auto-bindingi adaptera v13 obecne, deploy ich nie wywrócił.
+
+**Pozostało (bramki ludzkie):**
+1. Supabase → Authentication → URL Configuration: Site URL + Redirect URLs → `https://biomass-typer.kosy95.workers.dev` (+ zostaw `http://localhost:4321/**`). Bez tego linki w mailu potwierdzającym signup wskażą localhost.
+2. Pełny E2E: realny signup → mail → confirm → signin → `/dashboard`.
+3. Rotacja tokenu Cloudflare (był w czacie).
 
 ## Co wdrażamy
 
